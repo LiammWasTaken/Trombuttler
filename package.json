@@ -1,0 +1,29 @@
+{
+  "name": "trombloader",
+  "version": "1.0.0",
+  "description": "Automatically add trombone champ custom songs to the game :)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "author": "Liamm",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.3",
+    "@electron-forge/maker-deb": "^6.0.3",
+    "@electron-forge/maker-rpm": "^6.0.3",
+    "@electron-forge/maker-squirrel": "^6.0.3",
+    "@electron-forge/maker-zip": "^6.0.3",
+    "electron": "^21.3.1"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.9",
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
+    "fs": "^0.0.1-security",
+    "node-fetch": "^2.6.7",
+    "path": "^0.12.7"
+  }
+}
