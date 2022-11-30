@@ -71,21 +71,14 @@ loadSongs();
 //Helpers
 let notifIDTracker = 0;
 const notify = function (title, message) {
-  try {
-    document
-      .getElementById(`close-notification${notifIDTracker - 1}`)
-      .parentElement.remove();
-  } catch (error) {}
+  let htmlOBJ = `<h3>${title}</h3><p>${message}</p><p class="close-notification" id="close-notification${notifIDTracker}">X</p></div>`;
+  let notification = document.getElementById("notification");
+  notification.innerHTML = htmlOBJ;
+  notification.style.display = "block";
 
-  //TODO fix this to add in element properlly
-  let htmlOBJ = `<div class="notification" id="notification${notifIDTracker}"><h3>${title}</h3><p>${message}</p><p class="close-notification" id="close-notification${notifIDTracker}">X</p></div>`;
-  document.getElementById("wrapper").innerHTML += htmlOBJ;
-
-  document
-    .getElementById(`close-notification${notifIDTracker}`)
-    .addEventListener("click", (e) => {
-      e.target.parentElement.remove();
-    });
+  notification.addEventListener("click", () => {
+    notification.style.display = "none";
+  });
   notifIDTracker++;
 };
 //

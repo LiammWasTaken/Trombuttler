@@ -1,5 +1,5 @@
 {
-  "name": "trombloader",
+  "name": "trombuttler",
   "version": "1.0.0",
   "description": "Automatically add trombone champ custom songs to the game :)",
   "main": "main.js",
@@ -8,7 +8,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
-  "author": "Liamm",
+  "author": "Liamm-",
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.3",
