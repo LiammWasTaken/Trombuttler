@@ -1,3 +1,4 @@
+//REQUIRES
 const {
   app,
   BrowserWindow,
@@ -10,13 +11,10 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const AdmZip = require("adm-zip");
 const Store = require("electron-store");
-const { contextIsolated } = require("process");
 const store = new Store();
 
-//GLOBAL VARS
-const tempLoc = "./app/temp/temp.zip";
+const tempLoc = app.getAppPath() + "/temp.zip";
 let songsLoc;
-const overwriteSongs = true;
 
 //Closes app on window close
 app.on("window-all-closed", () => {
@@ -53,7 +51,7 @@ function downloadDiscordSong(download) {
       //Gets temp file as ADMZIP obj
       let tempZip = new AdmZip(tempLoc);
       //Extracts
-      tempZip.extractAllToAsync(songsLoc, overwriteSongs, cleanupDownload());
+      tempZip.extractAllToAsync(songsLoc, true, cleanupDownload());
     });
   });
 }
