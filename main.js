@@ -79,6 +79,8 @@ function downloadDiscordSongZip(download) {
 
 //Load the main UI
 const loadUI = () => {
+  //Set Custom Song Folder Location
+  songsLoc == null ? (songsLoc = store.get("songsLoc")) : false;
   appWindow = new BrowserWindow({
     width: 1200,
     height: 800,
