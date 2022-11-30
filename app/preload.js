@@ -19,6 +19,10 @@ const downloads = [
 contextBridge.exposeInMainWorld("songList", downloads);
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  downloadDiscordSong: (download) =>
-    ipcRenderer.send("downloadDiscordSong", download),
+  //Download Discord Song That's A Zip
+  downloadDiscordSongZip: (download) =>
+    ipcRenderer.send("downloadDiscordSongZip", download),
+  //Callback For When Any Download Is Complete
+  onDownloadComplete: (callback) =>
+    ipcRenderer.on("download-complete", callback),
 });

@@ -1,4 +1,4 @@
-//REQUIRES
+//REQUIRES//
 const {
   app,
   BrowserWindow,
@@ -13,33 +13,45 @@ const AdmZip = require("adm-zip");
 const Store = require("electron-store");
 const store = new Store();
 
-const tempLoc = app.getAppPath() + "/temp.zip";
+//GLOBAL VARIABLES//
+
+const tempLoc = app.getAppPath().toString() + "\\temp.zip";
 let songsLoc;
+let appWindow;
 
-//Closes app on window close
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit;
-});
-
+//MAIN METHOD//
 app.whenReady().then(() => {
+  //DEV USE RESET STORED DATA
+  //store.set("firstLaunch", true);
+  //store.set("songsLoc", null);
+
   //Load UI for Windows
-  loadUI();
+  firstLaunch() ? firstSetup() : loadUI();
 
   //Load UI when activated on Mac
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) loadUI;
+    if (BrowserWindow.getAllWindows().length === 0) {
+      firstLaunch() ? firstSetup() : loadUI();
+    }
   });
 
   //Methods from renderer
-  ipcMain.on("downloadDiscordSong", (e, download) => {
-    downloadDiscordSong(download);
+  ipcMain.on("downloadDiscordSongZip", (e, download) => {
+    downloadDiscordSongZip(download);
   });
 });
 
-//DOWNLOADS
+//Closes app on window close
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
 
-//Download from discord
-function downloadDiscordSong(download) {
+//HELPERS//
+
+//DOWNLOAD SPECIFIC FILE TYPES//
+
+//Download from discord normal zip
+function downloadDiscordSongZip(download) {
   //Fetches file
   fetch(download.url).then((song) => {
     //Create and write temp.zip
@@ -50,62 +62,70 @@ function downloadDiscordSong(download) {
     dest.on("close", () => {
       //Gets temp file as ADMZIP obj
       let tempZip = new AdmZip(tempLoc);
-      //Extracts
-      tempZip.extractAllToAsync(songsLoc, true, cleanupDownload());
+      //Object For Info About Download
+      let compDownload = {
+        songName: download.name,
+        type: "zip",
+        platform: "discord",
+        success: true,
+      };
+      //Extract, Cleanup And Notify Renderer
+      tempZip.extractAllToAsync(songsLoc, true, cleanupDownload(compDownload));
     });
   });
 }
 
-//Load the UI
-const loadUI = () => {
-  if (firstLaunch() === false) {
-    songsLoc = store.get("songsLoc");
-    console.log(songsLoc);
-    //Normal Flow
-    const win = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        preload: path.join(__dirname + "/app", "preload.js"),
-      },
-    });
+//UI METHODS//
 
-    win.loadFile("./app/app.html");
-  } else {
-    //Set up prefs
-    firstSetup();
-  }
+//Load the main UI
+const loadUI = () => {
+  appWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname + "/app", "preload.js"),
+    },
+    autoHideMenuBar: true,
+    icon: __dirname + "/icon.ico",
+  });
+  appWindow.loadFile("./app/app.html");
 };
 
-//First Setup
+//First Setup UI
 const firstSetup = function () {
-  //Get User Prefs
-  const options = {
+  //Prepare dialogue
+  const fd = {
     type: "question",
     buttons: ["Yes, please", "No, thanks"],
     defaultId: 2,
     title: "First time setup",
     message:
-      "Would you like to save custom song folder location for the future?",
+      "Would you like to save the custom song folder location for the future?",
     detail:
       "After this box, you will be prompted to find and select your custom songs folder.",
   };
 
-  let response = dialog.showMessageBox(options);
+  let response = dialog.showMessageBox(fd);
 
   response.then((r) => {
     //Get the file
     let file = getFileFromUser();
+    //Wait for file to be chosen
     file.then((f) => {
+      //Make sure it didn't crash/close
       if (!f.canceled) {
-        //Get the folder path
+        //Set the custom songs folder path
         songsLoc = f.filePaths[0];
-        //Save the info
+        //Save the info if user specified
         if (r.response === 0) {
           store.set("songsLoc", songsLoc);
           store.set("firstLaunch", false);
-          loadUI();
         }
+        //Load UI
+        loadUI();
+      } else {
+        //Cancelled  file selection, close the app
+        app.quit();
       }
     });
   });
@@ -118,18 +138,27 @@ const getFileFromUser = () => {
   });
 
   if (!file) {
-    return;
+    console.log("No file selected");
+    return false;
   }
 
   return file;
 };
 
+//MISC Helpers
+
 //Clean up download + notifiy of completion
-const cleanupDownload = function () {
+const cleanupDownload = function (compDownload) {
   if (deleteTempFile()) {
     notify(
       "Success!",
       "Trombuttler successfully downloaded a song, happy boning!"
+    );
+    appWindow.webContents.send(`download-complete`, compDownload);
+  } else {
+    notify(
+      "Error!",
+      "Something went wrong when downloading your song, please try again."
     );
   }
 };
@@ -153,7 +182,7 @@ const notify = function (NOTIFICATION_TITLE, NOTIFICATION_BODY) {
   }).show();
 };
 
-//Is it the first time launching
+//Check if it's the first time launching. Unnecsesary but looks nicer with one word rather than 3 lol
 const firstLaunch = function () {
   //Check if first time launching
   return store.get("firstLaunch");
